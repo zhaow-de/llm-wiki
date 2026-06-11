@@ -1,0 +1,12 @@
+[project]
+name = "llm-wiki"
+version = "0.0.0"
+description = "Not a Python app. Only for pre-commit"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+]

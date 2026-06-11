@@ -1,0 +1,151 @@
+name: llm-wiki Plugin Tests
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  # Guard job so the required "Structural validation" check is reported on every
+  # PR. A workflow-level paths filter would skip the workflow entirely and leave
+  # the required check stuck "Expected" forever; instead this job always runs and
+  # decides whether the heavy structural job should run or be skipped. A skipped
+  # required check counts as a pass, so PRs that touch no relevant paths are not
+  # blocked while still never running the tests needlessly.
+  detect:
+    name: "Detect relevant changes"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - name: Check changed paths
+        id: filter
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Manual runs always exercise the full structural job.
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Fail safe: if the diff can't be read, run the tests rather than skip.
+          files="$(gh pr diff "$PR" --repo "$REPO" --name-only 2>/dev/null)" \
+            || { echo "relevant=true" >> "$GITHUB_OUTPUT"; exit 0; }
+          relevant=false
+          while IFS= read -r f; do
+            case "$f" in
+              plugin/*|tests/*|pkb.py) relevant=true; break ;;
+            esac
+          done <<< "$files"
+          echo "relevant=$relevant" >> "$GITHUB_OUTPUT"
+
+  structural:
+    name: "Structural validation"
+    needs: detect
+    if: needs.detect.outputs.relevant == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Generate defect fixtures
+        run: chmod +x tests/generate-defect-fixtures.sh && ./tests/generate-defect-fixtures.sh
+
+      - name: Run structural tests
+        run: |
+          set +e
+          chmod +x tests/test-plugin-validate.sh tests/test-structure.sh tests/test-local-cli-doctor.sh
+
+          : > structural-results.md
+          echo "## Structural Validation Results" >> structural-results.md
+          echo "" >> structural-results.md
+
+          overall=0
+          run_one() {
+            local label="$1"; shift
+            local out rc line
+            out="$("$@" 2>&1)"
+            rc=$?
+            printf '%s\n' "$out"
+            line="$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' | grep -m1 '^Results:' | sed 's/^Results: //')"
+            [ -z "$line" ] && line="no results reported (exit $rc)"
+            printf -- '- **%s**: %s\n' "$label" "$line" >> structural-results.md
+            [ "$rc" -ne 0 ] && overall=1
+            return 0
+          }
+
+          run_one "Plugin validation" ./tests/test-plugin-validate.sh
+          run_one "Structural tests" ./tests/test-structure.sh
+          run_one "Local CLI doctor" ./tests/test-local-cli-doctor.sh
+
+          echo "STRUCTURAL_FAILED=$overall" >> "$GITHUB_ENV"
+
+      - name: Post results to PR
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file structural-results.md
+
+      - name: Quality gate
+        if: always()
+        run: |
+          if [ "${STRUCTURAL_FAILED:-1}" -ne 0 ]; then
+            echo "::error::Structural validation failed — see the PR comment / job log for counts"
+            exit 1
+          fi
+          echo "All structural tests passed."
+
+  behavioral:
+    name: "Behavioral evaluation"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+
+      - name: Cache Promptfoo
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/promptfoo
+          key: ${{ runner.os }}-promptfoo-v1
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Prepare workspace
+        run: |
+          mkdir -p tests/workspace
+          cp -r tests/fixtures/golden-wiki/* tests/workspace/
+
+      - name: Run behavioral evals
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx promptfoo@latest eval \
+            -c tests/promptfooconfig.yaml \
+            -o tests/results.json \
+            --repeat 2
+
+      - name: Quality gate
+        run: |
+          FAILURES=$(jq '.results.stats.failures' tests/results.json)
+          TOTAL=$(jq '.results.stats.successes + .results.stats.failures' tests/results.json)
+          echo "Failures: $FAILURES / Total: $TOTAL"
+          if [ "$FAILURES" -gt 0 ]; then
+            echo "::error::Behavioral evals failed: $FAILURES assertion failures"
+            exit 1
+          fi
