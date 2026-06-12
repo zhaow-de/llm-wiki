@@ -7,7 +7,7 @@ Pick by **what the token refers to**, not by where it appears.
 
 | Bucket       | Use it for                                                 | Examples |
 |--------------|------------------------------------------------------------|----------|
-| **`pkb`**      | The **plugin / command / tooling brand** — what you invoke. | `/pkb`, `/pkb:doctor`, `/pkb:ingest`, the `pkb.py` CLI; plugin `name: pkb`; the `pkb-manager` skill |
+| **`pkb`**      | The **plugin / command / tooling brand** — what you invoke. | `/pkb`, `/pkb-doctor`, `/pkb-ingest` (user aliases after `/pkb:install-commands`); `pkb:doctor` (plugin skill ref); the `pkb.py` CLI; plugin `name: pkb`; the `pkb-manager` skill |
 | **`wiki`**     | The **concept** — the content structure the plugin builds. | "a wiki", "topic wiki", the `wiki/` content subdir, `wiki-structure.md`, `wikis.json`, "open the wiki as an Obsidian vault" |
 | **`llm-wiki`** | The **project / repo / config / data** identity.           | the repo, the `llm-wiki` marketplace, `~/.config/llm-wiki/`, the hub dir `~/llm-wiki-data/`, the local dir `.llm-wiki-data/` |
 
@@ -22,7 +22,5 @@ knowledge base*, so it doubles "kb". Say "the pkb plugin", or just "pkb".
 
 ## doctor vs checkup
 
-The health-check command is **`/pkb:doctor`** (and the `pkb.py doctor`
-subcommand). The activity/report it produces is a **checkup**
-(`references/doctor.md` → `# Checkup Rules`, "checkup report", the
-`## [date] checkup` log entry).
+The health-check command is **`/pkb-doctor`** (user alias) / **`/pkb:doctor`** (plugin skill ref) / **`pkb.py doctor`** (CLI).
+The activity/report it produces is a **checkup** (`references/doctor.md` → `# Checkup Rules`, "checkup report", the `## [date] checkup` log entry).

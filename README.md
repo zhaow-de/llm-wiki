@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-v0.0.1-blue)
+![Version](https://img.shields.io/badge/version-v0.1.0-blue)
 ![GitHub License](https://img.shields.io/github/license/zhaow-de/llm-wiki)
 
 # llm-wiki - Personal Knowledge Base
@@ -51,7 +51,7 @@ wiki/     ← articles Claude synthesizes from raw/      (the executable)
 output/   ← reports, slides, plans on request          (what ships)
 ```
 
-The rule: **never hand-edit `wiki/`.** It is compiled — Claude rebuilds it from `raw/`. When an article is wrong, fix the *source* (ingest a better one, `/pkb:retract` a bad one) and recompile. Editing the compiled article is pointless: the next compile overwrites it.
+The rule: **never hand-edit `wiki/`.** It is compiled — Claude rebuilds it from `raw/`. When an article is wrong, fix the *source* (ingest a better one, `/pkb-retract` a bad one) and recompile. Editing the compiled article is pointless: the next compile overwrites it.
 
 Each **topic** is its own isolated wiki (crypto-quant, market-microstructure, defi…). Topics sit side by side under one **hub** but never bleed into each other — research stays scoped and context stays clean:
 
@@ -86,6 +86,14 @@ claude plugin install pkb@llm-wiki
 # restart Claude Code or run /reload-plugins in Claude Code
 ```
 
+Then, in Claude Code, run once to register the `/pkb-*` slash commands:
+
+```
+/pkb:install-commands
+```
+
+After this, invoke wiki commands as `/pkb`, `/pkb-research`, `/pkb-ingest`, etc. Re-run `/pkb-install-commands` after plugin updates to sync any new or removed commands.
+
 Confirm it loaded with `/pkb status`. Claude Desktop picks up the same plugin once Claude Code has installed it.
 
 The wiki lives at `~/llm-wiki-data/` by default; change the hub path with `/pkb config hub-path "<new-path>"`. To move to a newer version later, run `git -C /path/to/llm-wiki pull` then `claude plugin update pkb@llm-wiki` (restart or `/reload-plugins`).
@@ -96,14 +104,14 @@ Day-to-day work is one of three verbs. These three are the whole language:
 
 | Verb         | Command                                                         | What it does                                                                              |
 | ------------ | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| **Research** | `/pkb:research "funding rate arbitrage" --new-topic`            | Fans out parallel agents, ingests sources, compiles articles — hands back a finished wiki |
-| **Capture**  | `/pkb:ingest <url>` · drop files in `inbox/` · `/pkb add <url>` | Pulls in a source spotted by hand, rather than one the agents found                       |
-| **Ask**      | `/pkb:query "how do funding rates drive perp basis?"`           | Answers from the wiki, with citations back to the sources                                 |
+| **Research** | `/pkb-research "funding rate arbitrage" --new-topic`            | Fans out parallel agents, ingests sources, compiles articles — hands back a finished wiki |
+| **Capture**  | `/pkb-ingest <url>` · drop files in `inbox/` · `/pkb add <url>` | Pulls in a source spotted by hand, rather than one the agents found                       |
+| **Ask**      | `/pkb-query "how do funding rates drive perp basis?"`           | Answers from the wiki, with citations back to the sources                                 |
 
 The headline move — start a topic and walk away:
 
 ```
-/pkb:research "perpetual futures market making" --new-topic --min-time 2h
+/pkb-research "perpetual futures market making" --new-topic --min-time 2h
 ```
 
 It researches in rounds for two hours, drilling into every gap the previous round exposed. What waits afterward is a compiled wiki — not a tab graveyard.
@@ -121,9 +129,9 @@ Full tables for both are under [Research](#research) below.
 
 A knowledge base that cannot be trusted is worse than none, so `pkb` defends its own credibility:
 
-- `/pkb:refresh --due` — re-verify articles that have gone stale
-- `/pkb:audit` — trace a claim back through the wiki to its sources, and re-research when they look shaky
-- `/pkb:doctor` — structural health check (`--fix` cleans the obvious issues; see [Troubleshoot](#troubleshoot))
+- `/pkb-refresh --due` — re-verify articles that have gone stale
+- `/pkb-audit` — trace a claim back through the wiki to its sources, and re-research when they look shaky
+- `/pkb-doctor` — structural health check (`--fix` cleans the obvious issues; see [Troubleshoot](#troubleshoot))
 
 ### Read it anywhere<a name="read-it-anywhere"></a>
 
@@ -149,145 +157,221 @@ The full surface area follows. Most work runs for weeks on `research`, `query`, 
 | `/pkb init <name> --local`                                                                                         | Create a project-local wiki at `.llm-wiki-data/`                                                                          |
 | `/pkb config`                                                                                                      | Show all configuration (hub path, config file, topic wiki count)                                                          |
 | `/pkb config hub-path [<path>]`                                                                                    | Set the hub location (writes `~/.config/llm-wiki/config.json`), or show the current one                                   |
-| `/pkb:ingest <source>`                                                                                             | Ingest a URL, file path, PDF, or quoted text                                                                              |
-| `/pkb:ingest --inbox [--keep]`                                                                                     | Process all files in the topic wiki's inbox/ (`--keep` moves originals to `.processed/` instead of deleting)              |
-| `/pkb:ingest … --type <t> --title "T" --auto-classify --new-topic <n> --project <slug>`                            | Force the source type, override the title, auto-route to the best wiki, create a new topic, or tag a project              |
-| `/pkb:ingest-collection <source>`                                                                                  | Bulk-ingest Git doc repos, BIP-style proposal sets, MediaWiki dumps/API sites, message archives, or Wayback CDX snapshots |
-| `/pkb:ingest-collection <source> --adapter git\|mediawiki-dump\|mediawiki-api\|csv-messages\|wayback-cdx`          | Force a collection adapter                                                                                                |
-| `/pkb:ingest-collection <source> --limit <N> --dry-run`                                                            | Preview or cap a large collection import                                                                                  |
-| `/pkb:ingest-collection … --new-topic <n> --namespace <id> --include/--exclude <pat> --from/--to <date> --compile` | Create the target topic, filter MediaWiki namespaces or paths, bound Wayback date ranges, compile right after import      |
-| `/pkb:collect "<things>"`                                                                                          | Find, dedupe, and catalog artifacts, examples, resources, media, memes, tools, entities, or source candidates             |
-| `/pkb:collect "<things>" --scale tiny\|small\|medium\|large\|huge`                                                 | Control write behavior by operational scale, not just row count                                                           |
-| `/pkb:collect "<things>" --media archive\|thumbnail\|reference`                                                    | Download/cache bounded originals by default; use thumbnail for previews or reference to opt out                           |
-| `/pkb:collect "<things>" --inventory records`                                                                      | Create per-item inventory records when the collected set is small enough to stay useful                                   |
-| `/pkb:collect "<things>" --inventory corpus`                                                                       | Track a large, unstable, or media-heavy collection as one corpus record linked to the catalog output                      |
-| `/pkb:collect "<things>" --type <kind> --limit <N> --ingest-sources --dry-run`                                     | Force the collected kind, cap the catalog, ingest strong supporting pages as raw sources, or preview without writing      |
-| `/pkb:inventory list`                                                                                              | List durable tracking records as compact chat-friendly tables or bullets                                                  |
-| `/pkb:inventory list --view actions`                                                                               | Show current inventory next actions without dumping full records                                                          |
-| `/pkb:inventory add <kind> "title" [--priority p0-p4] [--source <path-or-url>]`                                    | Add an inventory record after checking that inventory is the right layer                                                  |
-| `/pkb:inventory show <slug>` / `update <path>`                                                                     | Show one record in full, or update its status/priority/next action                                                        |
-| `/pkb:inventory list --kind/--status/--priority --view summary\|items\|records\|sources --format table\|list`      | Filter records and pick the view/format of the listing                                                                    |
-| `/pkb:inventory save-view "name"`                                                                                  | Save a derived reusable table/list under `inventory/views/`                                                               |
-| `/pkb:inventory scan-outputs --dry-run`                                                                            | Find old queue/backlog outputs and preview sample records before migration                                                |
-| `/pkb:inventory migrate-output <path> --apply`                                                                     | Additively create inventory records from a legacy output; never moves or deletes the output                               |
-| `/pkb:dataset list`                                                                                                | List dataset manifests as compact chat-friendly tables or bullets                                                         |
-| `/pkb:dataset list --view schema`                                                                                  | Show schema/readiness state without opening samples or data                                                               |
-| `/pkb:dataset add "title" --location <path-or-url>`                                                                | Add a dataset manifest without copying data into the wiki                                                                 |
-| `/pkb:dataset show <slug>` / `sample <slug> [--limit N]`                                                           | Show one manifest in full, or capture a bounded sample note                                                               |
-| `/pkb:dataset list --status/--storage --view summary\|manifests\|locations --format table\|list`                   | Filter manifests and pick the view/format of the listing                                                                  |
-| `/pkb:dataset profile <slug> --dry-run`                                                                            | Preview lightweight profiling of size, format, headers, or schema observations                                            |
-| `/pkb:dataset scan-outputs --dry-run`                                                                              | Find old output artifacts that describe datasets and preview manifest candidates before migration                         |
-| `/pkb:dataset migrate-output <path> --apply`                                                                       | Additively create dataset manifests from a legacy output; never moves or copies the underlying data                       |
-| `/pkb:archive list [--archived]`                                                                                   | List active topic wikis and optionally archived topic wikis                                                               |
-| `/pkb:archive topic <slug> --reason "why"`                                                                         | Move a topic wiki to `topics/.archive/<slug>` and hide it from default context                                            |
-| `/pkb:archive restore <slug>`                                                                                      | Restore an archived topic wiki to active status                                                                           |
-| `/pkb:archive peek <query>`                                                                                        | Search archived topic indexes without reading archived articles                                                           |
-| `/pkb:compile`                                                                                                     | Compile new sources into wiki articles                                                                                    |
-| `/pkb:compile --full`                                                                                              | Recompile everything from scratch                                                                                         |
-| `/pkb:compile --source <path>` / `--topic <name>`                                                                  | Compile one specific source, or create/update one specific topic article                                                  |
-| `/pkb:retract <source-path> --reason "why"`                                                                        | Remove a source and clean its full blast radius (`--dry-run` to preview, `--recompile` to resynthesize affected articles) |
-| `/pkb:refresh [<article-path>]`                                                                                    | Re-verify an article's facts against its sources and update its `verified` date                                           |
-| `/pkb:refresh --due [--wiki <name\|all>]`                                                                          | List articles below the freshness threshold and refresh the selected ones                                                 |
-| `/pkb:project new <slug> "goal"`                                                                                   | Create `output/projects/<slug>/` with its required WHY.md                                                                 |
-| `/pkb:project list [--archived]` / `show <slug>`                                                                   | List project folders, or show one project's contents                                                                      |
-| `/pkb:project add <slug> <path>`                                                                                   | Move a loose output into a project folder                                                                                 |
-| `/pkb:project archive <slug>`                                                                                      | Move a finished project to `output/projects/.archive/`                                                                    |
-| `/pkb:query <question>`                                                                                            | Q&A against the wiki (standard depth)                                                                                     |
-| `/pkb:query <question> --quick`                                                                                    | Fast answer from indexes only                                                                                             |
-| `/pkb:query <question> --deep`                                                                                     | Thorough — reads everything, checks raw + sibling wikis                                                                   |
-| `/pkb:query <question> --raw`                                                                                      | Also search raw sources, not just compiled articles (implied by `--deep`)                                                 |
-| `/pkb:query <question> --include-archived`                                                                         | Explicitly search/read archived material, with archived citations labeled                                                 |
-| `/pkb:query <terms> --list [--tag <tag>] [--category <cat>]`                                                       | Find content by keyword, tag, or category (replaces old `/pkb:search`)                                                    |
-| `/pkb:query --resume`                                                                                              | Reload context after a session break — recent activity, stats, last-updated articles                                      |
-| `/pkb:plan <goal>`                                                                                                 | Generate wiki-grounded implementation plan (interview → gap research → phased plan)                                       |
-| `/pkb:plan <goal> --quick`                                                                                         | Plan from wiki content only — skip interview and gap research                                                             |
-| `/pkb:plan <goal> --no-interview` / `--no-research`                                                                | Skip only the interview stage, or only the gap-research stage                                                             |
-| `/pkb:plan <goal> --format rfc\|adr\|spec`                                                                         | Output as RFC, ADR, or tech spec instead of roadmap                                                                       |
-| `/pkb:research <topic>`                                                                                            | 5 parallel agents: academic, technical, applied, news, contrarian                                                         |
-| `/pkb:research <topic> --new-topic`                                                                                | Create a topic wiki and start researching — works from any directory                                                      |
-| `/pkb:research <topic> --min-time 1h`                                                                              | Keep researching in rounds until time budget is spent                                                                     |
-| `/pkb:research <topic> --plan`                                                                                     | Decompose into 3-5 parallel paths, confirm, then dispatch all at once                                                     |
-| `/pkb:research <topic> --deep`                                                                                     | 8 agents: adds historical, adjacent, data/stats                                                                           |
-| `/pkb:research <topic> --retardmax`                                                                                | 10 agents: skip planning, max speed, ingest aggressively                                                                  |
-| `/pkb:research <topic> --project <slug>`                                                                           | Save the research playbook into `output/projects/<slug>/` and tag compiled articles with the project                      |
-| `/pkb:research <claim> --mode thesis`                                                                              | Thesis-driven research: evidence for + against → verdict                                                                  |
-| `/pkb:research <claim> --mode thesis --min-time 1h`                                                                | Multi-round thesis investigation with anti-confirmation-bias                                                              |
-| `/pkb:doctor`                                                                                                      | Run health checks on the wiki                                                                                             |
-| `/pkb:doctor --fix`                                                                                                | Auto-fix structural issues                                                                                                |
-| `/pkb:doctor --deep`                                                                                               | Web-verify facts and suggest improvements                                                                                 |
-| `/pkb:doctor --archived-only`                                                                                      | Structural checks for archived topic wikis only                                                                           |
-| `/pkb:audit`                                                                                                       | Umbrella trust audit: wiki, outputs, provenance, and fresh research when needed                                           |
-| `/pkb:audit --artifact <path>`                                                                                     | Audit one article or output artifact and follow its evidence chain                                                        |
-| `/pkb:audit --project <slug>`                                                                                      | Audit one project's outputs and upstream wiki state                                                                       |
-| `/pkb:audit scan --wiki-only\|--outputs-only --quick --fresh`                                                      | Scope the audit pass; `--quick` stays local-only, `--fresh` ignores cached librarian results                              |
-| `/pkb:audit report`                                                                                                | Display the latest umbrella audit report                                                                                  |
-| `/pkb:librarian`                                                                                                   | Focused wiki maintenance: staleness and quality scan for the `wiki/` layer                                                |
-| `/pkb:librarian --article <path>`                                                                                  | Scan a single article                                                                                                     |
-| `/pkb:librarian scan --resume --passes <list> [--wiki <name\|all>]`                                                | Resume an interrupted scan, choose passes (default `staleness,quality`), or scan every active wiki                        |
-| `/pkb:librarian fix <id>`                                                                                          | Reserved — not yet implemented; the command currently replies that fix operations are unavailable                         |
-| `/pkb:librarian report`                                                                                            | Display the latest librarian scan report                                                                                  |
-| `/pkb:output <type>`                                                                                               | Generate: summary, report, study-guide, slides, timeline, glossary, comparison                                            |
-| `/pkb:output <type> --sources <paths>`                                                                             | Generate from specific wiki articles only                                                                                 |
-| `/pkb:output <type> --retardmax`                                                                                   | Ship it now — rough but comprehensive, iterate later                                                                      |
-| `/pkb:ll`                                                                                                          | Extract lessons learned from the current session into the wiki                                                            |
-| `/pkb:ll --dry-run`                                                                                                | Preview extracted lessons without writing                                                                                 |
-| `/pkb:ll --rules`                                                                                                  | Also suggest CLAUDE.md rule additions                                                                                     |
-| `/pkb:assess <path>`                                                                                               | Assess a repo against wiki research + market. Gap analysis.                                                               |
-| `/pkb:assess <path> --retardmax`                                                                                   | Wide net — adds adjacent fields and failure analysis                                                                      |
+| `/pkb-ingest <source>`                                                                                             | Ingest a URL, file path, PDF, or quoted text                                                                              |
+| `/pkb-ingest --inbox [--keep]`                                                                                     | Process all files in the topic wiki's inbox/ (`--keep` moves originals to `.processed/` instead of deleting)              |
+| `/pkb-ingest … --type <t> --title "T" --auto-classify --new-topic <n> --project <slug>`                            | Force the source type, override the title, auto-route to the best wiki, create a new topic, or tag a project              |
+| `/pkb-ingest-collection <source>`                                                                                  | Bulk-ingest Git doc repos, BIP-style proposal sets, MediaWiki dumps/API sites, message archives, or Wayback CDX snapshots |
+| `/pkb-ingest-collection <source> --adapter git\|mediawiki-dump\|mediawiki-api\|csv-messages\|wayback-cdx`          | Force a collection adapter                                                                                                |
+| `/pkb-ingest-collection <source> --limit <N> --dry-run`                                                            | Preview or cap a large collection import                                                                                  |
+| `/pkb-ingest-collection … --new-topic <n> --namespace <id> --include/--exclude <pat> --from/--to <date> --compile` | Create the target topic, filter MediaWiki namespaces or paths, bound Wayback date ranges, compile right after import      |
+| `/pkb-collect "<things>"`                                                                                          | Find, dedupe, and catalog artifacts, examples, resources, media, memes, tools, entities, or source candidates             |
+| `/pkb-collect "<things>" --scale tiny\|small\|medium\|large\|huge`                                                 | Control write behavior by operational scale, not just row count                                                           |
+| `/pkb-collect "<things>" --media archive\|thumbnail\|reference`                                                    | Download/cache bounded originals by default; use thumbnail for previews or reference to opt out                           |
+| `/pkb-collect "<things>" --inventory records`                                                                      | Create per-item inventory records when the collected set is small enough to stay useful                                   |
+| `/pkb-collect "<things>" --inventory corpus`                                                                       | Track a large, unstable, or media-heavy collection as one corpus record linked to the catalog output                      |
+| `/pkb-collect "<things>" --type <kind> --limit <N> --ingest-sources --dry-run`                                     | Force the collected kind, cap the catalog, ingest strong supporting pages as raw sources, or preview without writing      |
+| `/pkb-inventory list`                                                                                              | List durable tracking records as compact chat-friendly tables or bullets                                                  |
+| `/pkb-inventory list --view actions`                                                                               | Show current inventory next actions without dumping full records                                                          |
+| `/pkb-inventory add <kind> "title" [--priority p0-p4] [--source <path-or-url>]`                                    | Add an inventory record after checking that inventory is the right layer                                                  |
+| `/pkb-inventory show <slug>` / `update <path>`                                                                     | Show one record in full, or update its status/priority/next action                                                        |
+| `/pkb-inventory list --kind/--status/--priority --view summary\|items\|records\|sources --format table\|list`      | Filter records and pick the view/format of the listing                                                                    |
+| `/pkb-inventory save-view "name"`                                                                                  | Save a derived reusable table/list under `inventory/views/`                                                               |
+| `/pkb-inventory scan-outputs --dry-run`                                                                            | Find old queue/backlog outputs and preview sample records before migration                                                |
+| `/pkb-inventory migrate-output <path> --apply`                                                                     | Additively create inventory records from a legacy output; never moves or deletes the output                               |
+| `/pkb-dataset list`                                                                                                | List dataset manifests as compact chat-friendly tables or bullets                                                         |
+| `/pkb-dataset list --view schema`                                                                                  | Show schema/readiness state without opening samples or data                                                               |
+| `/pkb-dataset add "title" --location <path-or-url>`                                                                | Add a dataset manifest without copying data into the wiki                                                                 |
+| `/pkb-dataset show <slug>` / `sample <slug> [--limit N]`                                                           | Show one manifest in full, or capture a bounded sample note                                                               |
+| `/pkb-dataset list --status/--storage --view summary\|manifests\|locations --format table\|list`                   | Filter manifests and pick the view/format of the listing                                                                  |
+| `/pkb-dataset profile <slug> --dry-run`                                                                            | Preview lightweight profiling of size, format, headers, or schema observations                                            |
+| `/pkb-dataset scan-outputs --dry-run`                                                                              | Find old output artifacts that describe datasets and preview manifest candidates before migration                         |
+| `/pkb-dataset migrate-output <path> --apply`                                                                       | Additively create dataset manifests from a legacy output; never moves or copies the underlying data                       |
+| `/pkb-archive list [--archived]`                                                                                   | List active topic wikis and optionally archived topic wikis                                                               |
+| `/pkb-archive topic <slug> --reason "why"`                                                                         | Move a topic wiki to `topics/.archive/<slug>` and hide it from default context                                            |
+| `/pkb-archive restore <slug>`                                                                                      | Restore an archived topic wiki to active status                                                                           |
+| `/pkb-archive peek <query>`                                                                                        | Search archived topic indexes without reading archived articles                                                           |
+| `/pkb-compile`                                                                                                     | Compile new sources into wiki articles                                                                                    |
+| `/pkb-compile --full`                                                                                              | Recompile everything from scratch                                                                                         |
+| `/pkb-compile --source <path>` / `--topic <name>`                                                                  | Compile one specific source, or create/update one specific topic article                                                  |
+| `/pkb-retract <source-path> --reason "why"`                                                                        | Remove a source and clean its full blast radius (`--dry-run` to preview, `--recompile` to resynthesize affected articles) |
+| `/pkb-refresh [<article-path>]`                                                                                    | Re-verify an article's facts against its sources and update its `verified` date                                           |
+| `/pkb-refresh --due [--wiki <name\|all>]`                                                                          | List articles below the freshness threshold and refresh the selected ones                                                 |
+| `/pkb-project new <slug> "goal"`                                                                                   | Create `output/projects/<slug>/` with its required WHY.md                                                                 |
+| `/pkb-project list [--archived]` / `show <slug>`                                                                   | List project folders, or show one project's contents                                                                      |
+| `/pkb-project add <slug> <path>`                                                                                   | Move a loose output into a project folder                                                                                 |
+| `/pkb-project archive <slug>`                                                                                      | Move a finished project to `output/projects/.archive/`                                                                    |
+| `/pkb-query <question>`                                                                                            | Q&A against the wiki (standard depth)                                                                                     |
+| `/pkb-query <question> --quick`                                                                                    | Fast answer from indexes only                                                                                             |
+| `/pkb-query <question> --deep`                                                                                     | Thorough — reads everything, checks raw + sibling wikis                                                                   |
+| `/pkb-query <question> --raw`                                                                                      | Also search raw sources, not just compiled articles (implied by `--deep`)                                                 |
+| `/pkb-query <question> --include-archived`                                                                         | Explicitly search/read archived material, with archived citations labeled                                                 |
+| `/pkb-query <terms> --list [--tag <tag>] [--category <cat>]`                                                       | Find content by keyword, tag, or category (replaces old `/pkb:search`)                                                    |
+| `/pkb-query --resume`                                                                                              | Reload context after a session break — recent activity, stats, last-updated articles                                      |
+| `/pkb-plan <goal>`                                                                                                 | Generate wiki-grounded implementation plan (interview → gap research → phased plan)                                       |
+| `/pkb-plan <goal> --quick`                                                                                         | Plan from wiki content only — skip interview and gap research                                                             |
+| `/pkb-plan <goal> --no-interview` / `--no-research`                                                                | Skip only the interview stage, or only the gap-research stage                                                             |
+| `/pkb-plan <goal> --format rfc\|adr\|spec`                                                                         | Output as RFC, ADR, or tech spec instead of roadmap                                                                       |
+| `/pkb-research <topic>`                                                                                            | 5 parallel agents: academic, technical, applied, news, contrarian                                                         |
+| `/pkb-research <topic> --new-topic`                                                                                | Create a topic wiki and start researching — works from any directory                                                      |
+| `/pkb-research <topic> --min-time 1h`                                                                              | Keep researching in rounds until time budget is spent                                                                     |
+| `/pkb-research <topic> --plan`                                                                                     | Decompose into 3-5 parallel paths, confirm, then dispatch all at once                                                     |
+| `/pkb-research <topic> --deep`                                                                                     | 8 agents: adds historical, adjacent, data/stats                                                                           |
+| `/pkb-research <topic> --retardmax`                                                                                | 10 agents: skip planning, max speed, ingest aggressively                                                                  |
+| `/pkb-research <topic> --project <slug>`                                                                           | Save the research playbook into `output/projects/<slug>/` and tag compiled articles with the project                      |
+| `/pkb-research <claim> --mode thesis`                                                                              | Thesis-driven research: evidence for + against → verdict                                                                  |
+| `/pkb-research <claim> --mode thesis --min-time 1h`                                                                | Multi-round thesis investigation with anti-confirmation-bias                                                              |
+| `/pkb-doctor`                                                                                                      | Run health checks on the wiki                                                                                             |
+| `/pkb-doctor --fix`                                                                                                | Auto-fix structural issues                                                                                                |
+| `/pkb-doctor --deep`                                                                                               | Web-verify facts and suggest improvements                                                                                 |
+| `/pkb-doctor --archived-only`                                                                                      | Structural checks for archived topic wikis only                                                                           |
+| `/pkb-audit`                                                                                                       | Umbrella trust audit: wiki, outputs, provenance, and fresh research when needed                                           |
+| `/pkb-audit --artifact <path>`                                                                                     | Audit one article or output artifact and follow its evidence chain                                                        |
+| `/pkb-audit --project <slug>`                                                                                      | Audit one project's outputs and upstream wiki state                                                                       |
+| `/pkb-audit scan --wiki-only\|--outputs-only --quick --fresh`                                                      | Scope the audit pass; `--quick` stays local-only, `--fresh` ignores cached librarian results                              |
+| `/pkb-audit report`                                                                                                | Display the latest umbrella audit report                                                                                  |
+| `/pkb-librarian`                                                                                                   | Focused wiki maintenance: staleness and quality scan for the `wiki/` layer                                                |
+| `/pkb-librarian --article <path>`                                                                                  | Scan a single article                                                                                                     |
+| `/pkb-librarian scan --resume --passes <list> [--wiki <name\|all>]`                                                | Resume an interrupted scan, choose passes (default `staleness,quality`), or scan every active wiki                        |
+| `/pkb-librarian fix <id>`                                                                                          | Reserved — not yet implemented; the command currently replies that fix operations are unavailable                         |
+| `/pkb-librarian report`                                                                                            | Display the latest librarian scan report                                                                                  |
+| `/pkb-output <type>`                                                                                               | Generate: summary, report, study-guide, slides, timeline, glossary, comparison                                            |
+| `/pkb-output <type> --sources <paths>`                                                                             | Generate from specific wiki articles only                                                                                 |
+| `/pkb-output <type> --retardmax`                                                                                   | Ship it now — rough but comprehensive, iterate later                                                                      |
+| `/pkb-ll`                                                                                                          | Extract lessons learned from the current session into the wiki                                                            |
+| `/pkb-ll --dry-run`                                                                                                | Preview extracted lessons without writing                                                                                 |
+| `/pkb-ll --rules`                                                                                                  | Also suggest CLAUDE.md rule additions                                                                                     |
+| `/pkb-assess <path>`                                                                                               | Assess a repo against wiki research + market. Gap analysis.                                                               |
+| `/pkb-assess <path> --retardmax`                                                                                   | Wide net — adds adjacent fields and failure analysis                                                                      |
 
-All commands accept `--wiki <name>` to target a specific topic wiki and `--local` to target the project wiki — except `/pkb:archive`, which operates at the hub level (only its `peek` subcommand takes `--wiki`, and project-local `.llm-wiki-data/` directories cannot be archived). Archived topic wikis are skipped by default; commands that support `--include-archived` require that explicit flag before reading or writing archived material. Commands that generate content (`query`, `output`, `plan`) also accept `--with <wiki>` to load supplementary wikis as cross-wiki context — e.g., `--with article-writing` applies writing craft knowledge when generating output from a domain wiki.
+All commands accept `--wiki <name>` to target a specific topic wiki and `--local` to target the project wiki — except `/pkb-archive`, which operates at the hub level (only its `peek` subcommand takes `--wiki`, and project-local `.llm-wiki-data/` directories cannot be archived). Archived topic wikis are skipped by default; commands that support `--include-archived` require that explicit flag before reading or writing archived material. Commands that generate content (`query`, `output`, `plan`) also accept `--with <wiki>` to load supplementary wikis as cross-wiki context — e.g., `--with article-writing` applies writing craft knowledge when generating output from a domain wiki.
 
-`/pkb:librarian` is the focused wiki-maintenance tool. `/pkb:audit` is broader and may perform fresh research to decide whether the current knowledge or generated outputs are still trustworthy.
+`/pkb-librarian` is the focused wiki-maintenance tool. `/pkb-audit` is broader and may perform fresh research to decide whether the current knowledge or generated outputs are still trustworthy.
 
 #### Examples<a name="examples"></a>
 
-```
+```shell
 # ── Daily — research, capture, ask ──────────────────────────────
-/pkb:research "funding rate arbitrage" --new-topic            # Create wiki + research in one shot
-/pkb:research "perp basis" --wiki crypto-quant                # Add more research to an existing wiki
-/pkb:research "market making" --deep --min-time 2h            # 8 agents, keep going for 2 hours
-/pkb:research "statistical arbitrage" --retardmax             # 10 agents, max speed, ingest everything
-/pkb:research "What makes a crypto market-making strategy profitable?" --new-topic  # Question → decompose → playbook
-/pkb:research "funding-rate carry on perps delivers positive risk-adjusted returns" --mode thesis  # Thesis: evidence for + against → verdict
-/pkb:research "high basis predicts negative forward returns" --mode thesis --min-time 1h  # Deep thesis investigation
-/pkb:ingest https://example.com/strategy-writeup            # Manually ingest a source
-/pkb add https://example.com/strategy-writeup              # Fuzzy router detects URL → ingest
-/pkb:ingest --inbox                                        # Process files dropped in inbox/
-/pkb:ingest-collection https://github.com/bitcoin/bips --wiki bitcoin  # Bulk import spec repos
-/pkb:ingest-collection https://dump.bitcoin.it/dump_20260429_en.xml.bz2 --wiki bitcoin  # Import MediaWiki dumps
-/pkb:ingest-collection trades.csv --adapter csv-messages --wiki crypto-quant  # Split record/message archives
-/pkb:ingest-collection "https://example.com/*" --adapter wayback-cdx --from 20100101 --to 20200101  # Import archived snapshots
-/pkb:collect "perp DEX analytics dashboards" --wiki crypto-quant  # Find, dedupe, download media, catalog
-/pkb:collect "bitcoin memes" --scale medium --media reference --inventory corpus  # Catalog media without binary downloads
-/pkb:query "How do funding rates drive perp basis?"        # Ask the wiki
-/pkb what do we know about MEV sandwich attacks?           # Fuzzy router detects question → query
-/pkb:query "compare funding-carry and cash-and-carry basis trades" --deep  # Deep cross-referenced answer
-/pkb:query --resume                                        # Where the last session left off
+
+# Create wiki + research in one shot
+/pkb-research "funding rate arbitrage" --new-topic
+
+# Add more research to an existing wiki
+/pkb-research "perp basis" --wiki crypto-quant
+
+# 8 agents, keep going for 2 hours
+/pkb-research "market making" --deep --min-time 2h
+
+# 10 agents, max speed, ingest everything
+/pkb-research "statistical arbitrage" --retardmax
+
+# Question → decompose → playbook
+/pkb-research "What makes a crypto market-making strategy profitable?" --new-topic
+
+# Thesis: evidence for + against → verdict
+/pkb-research "funding-rate carry on perps delivers positive risk-adjusted returns" --mode thesis
+
+# Deep thesis investigation
+/pkb-research "high basis predicts negative forward returns" --mode thesis --min-time 1h
+
+# Manually ingest a source
+/pkb-ingest https://example.com/strategy-writeup
+
+# Fuzzy router detects URL → ingest
+/pkb add https://example.com/strategy-writeup
+
+# Process files dropped in inbox/
+/pkb-ingest --inbox
+
+# Bulk import spec repos
+/pkb-ingest-collection https://github.com/bitcoin/bips --wiki bitcoin
+
+# Import MediaWiki dumps
+/pkb-ingest-collection https://dump.bitcoin.it/dump_20260429_en.xml.bz2 --wiki bitcoin
+
+# Split record/message archives
+/pkb-ingest-collection trades.csv --adapter csv-messages --wiki crypto-quant
+
+# Import archived snapshots
+/pkb-ingest-collection "https://example.com/*" --adapter wayback-cdx --from 20100101 --to 20200101
+
+# Find, dedupe, download media, catalog
+/pkb-collect "perp DEX analytics dashboards" --wiki crypto-quant
+
+# Catalog media without binary downloads
+/pkb-collect "bitcoin memes" --scale medium --media reference --inventory corpus
+
+# Ask the wiki
+/pkb-query "How do funding rates drive perp basis?"
+
+# Fuzzy router detects question → query
+/pkb what do we know about MEV sandwich attacks?
+
+# Deep cross-referenced answer
+/pkb-query "compare funding-carry and cash-and-carry basis trades" --deep
+
+# Where the last session left off
+/pkb-query --resume
 
 # ── Maintenance — compile, verify, organize, produce ────────────
-/pkb:compile                                             # Compile any unprocessed sources
-/pkb:refresh --due                                       # Re-verify articles below the freshness threshold
-/pkb:retract raw/articles/2026-bad-backtest.md --reason "Lookahead bias found"  # Remove a source + clean its blast radius
-/pkb:archive topic old-strategy --reason "No longer traded"  # Preserve a topic but hide it from normal context
-/pkb:archive list --archived                             # Show active and archived topic wikis
-/pkb:archive restore old-strategy                        # Bring an archived topic back
-/pkb:inventory add ingest-candidate "Deribit Insights blog" --wiki crypto-quant  # Track source queues and next actions
-/pkb:inventory add item "Kaiko market-data subscription" --wiki crypto-quant  # Track accounts, feeds, hosts, or assets
-/pkb:inventory list --view actions --limit 10            # Compact chat table of current inventory next actions
-/pkb:inventory scan-outputs --dry-run                    # Preview queues/backlogs before any inventory pivot
-/pkb:dataset add "Binance 1m OHLCV 2017-2025" --location s3://md-bucket/binance-ohlcv --wiki crypto-quant  # Index data that stays external
-/pkb:dataset list --view schema --limit 10               # Compact chat table of dataset schema/readiness state
-/pkb:dataset scan-outputs --dry-run                      # Find legacy data reports that could become dataset manifests
-/pkb:audit --project funding-carry-backtest              # Truth-seeking audit across outputs + wiki + fresh research
-/pkb:project new funding-carry-backtest "Ship the funding-carry backtest"  # Group outputs into a project folder
-/pkb:output report --topic funding-rates                 # Generate a report
-/pkb:output slides --retardmax                           # Ship a rough slide deck NOW
-/pkb:assess /path/to/my-strategy --wiki crypto-quant     # Gap analysis: repo vs wiki vs market
+
+# Compile any unprocessed sources
+/pkb-compile
+
+# Re-verify articles below the freshness threshold
+/pkb-refresh --due
+
+# Remove a source + clean its blast radius
+/pkb-retract raw/articles/2026-bad-backtest.md --reason "Lookahead bias found"
+
+# Preserve a topic but hide it from normal context
+/pkb-archive topic old-strategy --reason "No longer traded"
+
+# Show active and archived topic wikis
+/pkb-archive list --archived
+
+# Bring an archived topic back
+/pkb-archive restore old-strategy
+
+# Track source queues and next actions
+/pkb-inventory add ingest-candidate "Deribit Insights blog" --wiki crypto-quant
+
+# Track accounts, feeds, hosts, or assets
+/pkb-inventory add item "Kaiko market-data subscription" --wiki crypto-quant
+
+# Compact chat table of current inventory next actions
+/pkb-inventory list --view actions --limit 10
+
+# Preview queues/backlogs before any inventory pivot
+/pkb-inventory scan-outputs --dry-run
+
+# Index data that stays external
+/pkb-dataset add "Binance 1m OHLCV 2017-2025" --location s3://md-bucket/binance-ohlcv --wiki crypto-quant
+
+# Compact chat table of dataset schema/readiness state
+/pkb-dataset list --view schema --limit 10
+
+# Find legacy data reports that could become dataset manifests
+/pkb-dataset scan-outputs --dry-run
+
+# Truth-seeking audit across outputs + wiki + fresh research
+/pkb-audit --project funding-carry-backtest
+
+# Group outputs into a project folder
+/pkb-project new funding-carry-backtest "Ship the funding-carry backtest"
+
+# Generate a report
+/pkb-output report --topic funding-rates
+
+# Ship a rough slide deck NOW
+/pkb-output slides --retardmax
+
+# Gap analysis: repo vs wiki vs market
+/pkb-assess /path/to/my-strategy --wiki crypto-quant
 ```
 
 #### Research<a name="research"></a>
 
-`/pkb:research` casts a fan-out of parallel agents and compiles what they find into the wiki. A run is shaped by three independent choices: how wide it casts (**breadth**), what kind of research it does (**`--mode`**), and **modifiers**.
+`/pkb-research` casts a fan-out of parallel agents and compiles what they find into the wiki. A run is shaped by three independent choices: how wide it casts (**breadth**), what kind of research it does (**`--mode`**), and **modifiers**.
 
 **Breadth** — how many parallel agents:
 
@@ -304,7 +388,7 @@ All commands accept `--wiki <name>` to target a specific topic wiki and `--local
 | Open-ended *(default)* | *(none)*        | Explore a topic or answer a question — auto-detects which (see below)                                   |
 | Thesis                 | `--mode thesis` | Treat the input as a claim to evaluate: balanced supporting/opposing agents, evidence tables, a verdict |
 
-In **open-ended** mode, `/pkb:research` auto-detects whether the input is a topic or a question:
+In **open-ended** mode, `/pkb-research` auto-detects whether the input is a topic or a question:
 
 | Input                                               | Detected as | Behavior                                                                                                    |
 | --------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
@@ -335,13 +419,13 @@ With `--min-time`, Round 2 automatically focuses on the WEAKER side of the evide
 
 ```
 # Full combo — new topic, 2 hours of deep open-ended research, from anywhere
-/pkb:research "perpetual futures market making" --new-topic --deep --min-time 2h
+/pkb-research "perpetual futures market making" --new-topic --deep --min-time 2h
 
 # A claim, investigated over an hour with anti-confirmation-bias rounds
-/pkb:research "funding-rate carry on perps delivers positive risk-adjusted returns" --mode thesis --min-time 1h
+/pkb-research "funding-rate carry on perps delivers positive risk-adjusted returns" --mode thesis --min-time 1h
 ```
 
-Retardmax breadth is inspired by [Elisha Long's retardmaxxing philosophy](https://www.retardmaxx.com/) — act first, think later. The antidote to analysis paralysis. It works for both `/pkb:research` and `/pkb:output`.
+Retardmax breadth is inspired by [Elisha Long's retardmaxxing philosophy](https://www.retardmaxx.com/) — act first, think later. The antidote to analysis paralysis. It works for both `/pkb-research` and `/pkb-output`.
 
 #### Query depths<a name="query-depths"></a>
 
@@ -361,12 +445,12 @@ If `/pkb` commands don't appear after installing or updating, restart Claude Cod
 Check the wiki's health with the agentic doctor:
 
 ```
-/pkb:doctor          # Run health checks on the wiki
-/pkb:doctor --fix    # Auto-fix structural issues
-/pkb:doctor --deep   # Web-verify facts and suggest improvements
+/pkb-doctor          # Run health checks on the wiki
+/pkb-doctor --fix    # Auto-fix structural issues
+/pkb-doctor --deep   # Web-verify facts and suggest improvements
 ```
 
-For a deterministic, no-LLM checkup — or to run checks straight from the cloned checkout — use the bundled `pkb.py` CLI. It covers the structural checks that don't need an agent (the agentic `/pkb:doctor` remains the full editorial protocol) plus the structural archive operations:
+For a deterministic, no-LLM checkup — or to run checks straight from the cloned checkout — use the bundled `pkb.py` CLI. It covers the structural checks that don't need an agent (the agentic `/pkb-doctor` remains the full editorial protocol) plus the structural archive operations:
 
 ```bash
 ./pkb.py doctor /path/to/llm-wiki-data
