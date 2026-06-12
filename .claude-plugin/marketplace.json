@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "llm-wiki",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "LLM-compiled knowledge base plugin.",
   "owner": {
     "name": "zhaow-de"
@@ -11,7 +11,7 @@
       "name": "pkb",
       "displayName": "llm-wiki-pkb",
       "description": "LLM-compiled knowledge base. Commands: /pkb (natural language router + init/status), /pkb:ingest, /pkb:ingest-collection, /pkb:collect, /pkb:inventory, /pkb:dataset, /pkb:archive, /pkb:compile, /pkb:query (quick/standard/deep/--resume), /pkb:research (5-10 parallel agents, --new-topic, --min-time, --mode thesis), /pkb:audit, /pkb:librarian, /pkb:refresh, /pkb:assess, /pkb:plan, /pkb:doctor, /pkb:output, /pkb:retract, /pkb:project, /pkb:ll.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "zhaow-de"
       },
