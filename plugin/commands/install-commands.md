@@ -58,7 +58,7 @@ When `argument-hint` is present, the file content is:
 
 ```
 ---
-description: <description>
+description: (llm-wiki-pkb) <description>
 argument-hint: <argument-hint>
 ---
 
@@ -69,7 +69,7 @@ When `argument-hint` is absent:
 
 ```
 ---
-description: <description>
+description: (llm-wiki-pkb) <description>
 ---
 
 Use the `<skill_ref>` skill with these arguments: <ARGS_PLACEHOLDER>
