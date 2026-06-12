@@ -23,6 +23,9 @@ providers:
       sandbox:
         enabled: true
         autoAllowBashIfSandboxed: true
+        # CI runners lack bwrap/socat; fall back to unsandboxed there
+        # while still sandboxing wherever the deps are present (e.g. local).
+        failIfUnavailable: false
       settings:
         permissions:
           allow:
