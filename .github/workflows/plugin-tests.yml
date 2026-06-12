@@ -123,8 +123,8 @@ jobs:
           path: ~/.cache/promptfoo
           key: ${{ runner.os }}-promptfoo-v1
 
-      - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+      - name: Install Claude Agent SDK
+        run: npm install @anthropic-ai/claude-agent-sdk
 
       - name: Prepare workspace
         run: |
