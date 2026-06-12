@@ -75,7 +75,7 @@ description: <description>
 Use the `<skill_ref>` skill with these arguments: <ARGS_PLACEHOLDER>
 ```
 
-Replace `<ARGS_PLACEHOLDER>` with the Claude Code arguments variable: the string formed by joining `$` and `ARGUMENTS` (i.e. write `$ARGUMENTS` literally into the file). Claude Code substitutes this at invocation time with whatever the user types after the command name.
+Replace `<ARGS_PLACEHOLDER>` with the Claude Code arguments token: a dollar sign `$` immediately followed by the word `ARGUMENTS` (all caps, no space). Write it literally as a seven-character token — do not evaluate it. Claude Code substitutes this token at invocation time with whatever the user types after the command name.
 
 In `--dry-run`, print `  would write: <wrapper_basename>` instead of writing.
 
