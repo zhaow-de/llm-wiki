@@ -331,8 +331,13 @@ The `inbox/` directory is a drop zone. Users dump files there via Finder, `cp`, 
 
 After writing each source file, update indexes in order:
 
-1. `raw/{type}/_index.md` — add row to Contents table
-2. `raw/_index.md` — add row to Contents table
+1. `raw/{type}/_index.md` — add a row to the Contents table (leaf index; agents
+   read this during compilation to discover sources, so this update is required,
+   not optional)
+2. `raw/_index.md` — increment `Total sources` in the `## Stats` section (this
+   file is an aggregate index: each type has a named section pointing to its
+   own `_index.md`, plus a `## Stats` block with `Total sources: N`; do NOT
+   add a per-file row here)
 3. `_index.md` (master) — increment source count, add to Recent Changes
 
 ## Batch Ingestion
