@@ -249,48 +249,124 @@ All commands accept `--wiki <name>` to target a specific topic wiki and `--local
 
 #### Examples<a name="examples"></a>
 
-```
+```shell
 # ── Daily — research, capture, ask ──────────────────────────────
-/pkb-research "funding rate arbitrage" --new-topic            # Create wiki + research in one shot
-/pkb-research "perp basis" --wiki crypto-quant                # Add more research to an existing wiki
-/pkb-research "market making" --deep --min-time 2h            # 8 agents, keep going for 2 hours
-/pkb-research "statistical arbitrage" --retardmax             # 10 agents, max speed, ingest everything
-/pkb-research "What makes a crypto market-making strategy profitable?" --new-topic  # Question → decompose → playbook
-/pkb-research "funding-rate carry on perps delivers positive risk-adjusted returns" --mode thesis  # Thesis: evidence for + against → verdict
-/pkb-research "high basis predicts negative forward returns" --mode thesis --min-time 1h  # Deep thesis investigation
-/pkb-ingest https://example.com/strategy-writeup            # Manually ingest a source
-/pkb add https://example.com/strategy-writeup              # Fuzzy router detects URL → ingest
-/pkb-ingest --inbox                                        # Process files dropped in inbox/
-/pkb-ingest-collection https://github.com/bitcoin/bips --wiki bitcoin  # Bulk import spec repos
-/pkb-ingest-collection https://dump.bitcoin.it/dump_20260429_en.xml.bz2 --wiki bitcoin  # Import MediaWiki dumps
-/pkb-ingest-collection trades.csv --adapter csv-messages --wiki crypto-quant  # Split record/message archives
-/pkb-ingest-collection "https://example.com/*" --adapter wayback-cdx --from 20100101 --to 20200101  # Import archived snapshots
-/pkb-collect "perp DEX analytics dashboards" --wiki crypto-quant  # Find, dedupe, download media, catalog
-/pkb-collect "bitcoin memes" --scale medium --media reference --inventory corpus  # Catalog media without binary downloads
-/pkb-query "How do funding rates drive perp basis?"        # Ask the wiki
-/pkb what do we know about MEV sandwich attacks?           # Fuzzy router detects question → query
-/pkb-query "compare funding-carry and cash-and-carry basis trades" --deep  # Deep cross-referenced answer
-/pkb-query --resume                                        # Where the last session left off
+
+# Create wiki + research in one shot
+/pkb-research "funding rate arbitrage" --new-topic
+
+# Add more research to an existing wiki
+/pkb-research "perp basis" --wiki crypto-quant
+
+# 8 agents, keep going for 2 hours
+/pkb-research "market making" --deep --min-time 2h
+
+# 10 agents, max speed, ingest everything
+/pkb-research "statistical arbitrage" --retardmax
+
+# Question → decompose → playbook
+/pkb-research "What makes a crypto market-making strategy profitable?" --new-topic
+
+# Thesis: evidence for + against → verdict
+/pkb-research "funding-rate carry on perps delivers positive risk-adjusted returns" --mode thesis
+
+# Deep thesis investigation
+/pkb-research "high basis predicts negative forward returns" --mode thesis --min-time 1h
+
+# Manually ingest a source
+/pkb-ingest https://example.com/strategy-writeup
+
+# Fuzzy router detects URL → ingest
+/pkb add https://example.com/strategy-writeup
+
+# Process files dropped in inbox/
+/pkb-ingest --inbox
+
+# Bulk import spec repos
+/pkb-ingest-collection https://github.com/bitcoin/bips --wiki bitcoin
+
+# Import MediaWiki dumps
+/pkb-ingest-collection https://dump.bitcoin.it/dump_20260429_en.xml.bz2 --wiki bitcoin
+
+# Split record/message archives
+/pkb-ingest-collection trades.csv --adapter csv-messages --wiki crypto-quant
+
+# Import archived snapshots
+/pkb-ingest-collection "https://example.com/*" --adapter wayback-cdx --from 20100101 --to 20200101
+
+# Find, dedupe, download media, catalog
+/pkb-collect "perp DEX analytics dashboards" --wiki crypto-quant
+
+# Catalog media without binary downloads
+/pkb-collect "bitcoin memes" --scale medium --media reference --inventory corpus
+
+# Ask the wiki
+/pkb-query "How do funding rates drive perp basis?"
+
+# Fuzzy router detects question → query
+/pkb what do we know about MEV sandwich attacks?
+
+# Deep cross-referenced answer
+/pkb-query "compare funding-carry and cash-and-carry basis trades" --deep
+
+# Where the last session left off
+/pkb-query --resume
 
 # ── Maintenance — compile, verify, organize, produce ────────────
-/pkb-compile                                             # Compile any unprocessed sources
-/pkb-refresh --due                                       # Re-verify articles below the freshness threshold
-/pkb-retract raw/articles/2026-bad-backtest.md --reason "Lookahead bias found"  # Remove a source + clean its blast radius
-/pkb-archive topic old-strategy --reason "No longer traded"  # Preserve a topic but hide it from normal context
-/pkb-archive list --archived                             # Show active and archived topic wikis
-/pkb-archive restore old-strategy                        # Bring an archived topic back
-/pkb-inventory add ingest-candidate "Deribit Insights blog" --wiki crypto-quant  # Track source queues and next actions
-/pkb-inventory add item "Kaiko market-data subscription" --wiki crypto-quant  # Track accounts, feeds, hosts, or assets
-/pkb-inventory list --view actions --limit 10            # Compact chat table of current inventory next actions
-/pkb-inventory scan-outputs --dry-run                    # Preview queues/backlogs before any inventory pivot
-/pkb-dataset add "Binance 1m OHLCV 2017-2025" --location s3://md-bucket/binance-ohlcv --wiki crypto-quant  # Index data that stays external
-/pkb-dataset list --view schema --limit 10               # Compact chat table of dataset schema/readiness state
-/pkb-dataset scan-outputs --dry-run                      # Find legacy data reports that could become dataset manifests
-/pkb-audit --project funding-carry-backtest              # Truth-seeking audit across outputs + wiki + fresh research
-/pkb-project new funding-carry-backtest "Ship the funding-carry backtest"  # Group outputs into a project folder
-/pkb-output report --topic funding-rates                 # Generate a report
-/pkb-output slides --retardmax                           # Ship a rough slide deck NOW
-/pkb-assess /path/to/my-strategy --wiki crypto-quant     # Gap analysis: repo vs wiki vs market
+
+# Compile any unprocessed sources
+/pkb-compile
+
+# Re-verify articles below the freshness threshold
+/pkb-refresh --due
+
+# Remove a source + clean its blast radius
+/pkb-retract raw/articles/2026-bad-backtest.md --reason "Lookahead bias found"
+
+# Preserve a topic but hide it from normal context
+/pkb-archive topic old-strategy --reason "No longer traded"
+
+# Show active and archived topic wikis
+/pkb-archive list --archived
+
+# Bring an archived topic back
+/pkb-archive restore old-strategy
+
+# Track source queues and next actions
+/pkb-inventory add ingest-candidate "Deribit Insights blog" --wiki crypto-quant
+
+# Track accounts, feeds, hosts, or assets
+/pkb-inventory add item "Kaiko market-data subscription" --wiki crypto-quant
+
+# Compact chat table of current inventory next actions
+/pkb-inventory list --view actions --limit 10
+
+# Preview queues/backlogs before any inventory pivot
+/pkb-inventory scan-outputs --dry-run
+
+# Index data that stays external
+/pkb-dataset add "Binance 1m OHLCV 2017-2025" --location s3://md-bucket/binance-ohlcv --wiki crypto-quant
+
+# Compact chat table of dataset schema/readiness state
+/pkb-dataset list --view schema --limit 10
+
+# Find legacy data reports that could become dataset manifests
+/pkb-dataset scan-outputs --dry-run
+
+# Truth-seeking audit across outputs + wiki + fresh research
+/pkb-audit --project funding-carry-backtest
+
+# Group outputs into a project folder
+/pkb-project new funding-carry-backtest "Ship the funding-carry backtest"
+
+# Generate a report
+/pkb-output report --topic funding-rates
+
+# Ship a rough slide deck NOW
+/pkb-output slides --retardmax
+
+# Gap analysis: repo vs wiki vs market
+/pkb-assess /path/to/my-strategy --wiki crypto-quant
 ```
 
 #### Research<a name="research"></a>
