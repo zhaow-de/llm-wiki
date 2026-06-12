@@ -2,7 +2,7 @@
   "name": "pkb",
   "displayName": "llm-wiki-pkb",
   "description": "LLM-compiled knowledge base. Natural language routing, collector catalogs, topic archive lifecycle, inventory tracking, dataset manifests, collection ingestion for external wikis/spec repos, truth-seeking audits, session resume, concurrent-safe derived indexes, topic-isolated wikis, parallel multi-agent research, thesis-driven investigation, repo assessment, Obsidian dual-linking, retardmax mode, and --min-time sustained research.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "zhaow-de"
   },
