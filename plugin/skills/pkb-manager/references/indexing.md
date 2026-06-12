@@ -60,8 +60,14 @@ When an index is stale:
 ### Write Operations (ingest, compile, research, inventory, dataset)
 
 - Write the article/source file with correct frontmatter — this is the source of truth
-- Index updates are **best-effort** — update if convenient, but if skipped or if a concurrent session overwrites, no data is lost
-- The next read will detect staleness and rebuild
+- **Leaf directory index** (`raw/{type}/_index.md`, `wiki/{category}/_index.md`):
+  update immediately after writing the file. Agents use these to discover
+  sources during compilation — a stale leaf index means sources are silently
+  skipped. This is a required update, not optional.
+- **Aggregate index** (`raw/_index.md`, `wiki/_index.md`, master `_index.md`):
+  update is **best-effort** — if skipped (e.g. crash, concurrent write), no
+  data is lost because the next read will detect staleness and rebuild from the
+  leaf indexes.
 
 ### Read Operations (query, status, doctor)
 
@@ -76,15 +82,25 @@ When an index is stale:
 - `log.md` is append-only with small atomic writes — already safe
 - No locks needed, no stale lock cleanup, no coordination between sessions
 
-## When to Update Indexes (Best-Effort)
+## When to Update Indexes
 
-Write operations SHOULD update indexes when convenient:
-- A file is added to the directory
-- A file is removed from the directory
+**Leaf directory indexes** (`raw/{type}/_index.md`, `wiki/{category}/_index.md`)
+— update immediately when:
+- A file is added or removed from the directory
 - A file's frontmatter (title, summary, tags) changes
-- Statistics change (after compilation, after checkup)
 
-But these updates are optional. If skipped (e.g., due to a crash or concurrent write), the next read operation will detect the stale index and rebuild it automatically.
+These updates are **required**. Agents use leaf indexes to discover sources
+during compilation; a stale leaf index silently drops sources from the compile
+pass.
+
+**Aggregate indexes** (`raw/_index.md`, `wiki/_index.md`, master `_index.md`)
+— update when convenient:
+- Statistics change (after compilation, after checkup)
+- A new type subdirectory is added or removed
+
+These updates are **best-effort**. If skipped (e.g., due to a crash or
+concurrent write), the next read operation will detect the stale aggregate
+index and rebuild it from the leaf indexes automatically.
 
 ## Index Update Procedure
 

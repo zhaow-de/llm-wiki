@@ -239,7 +239,18 @@ Automatically run a quick structural check when any of these triggers occur:
 
 1. **Hub integrity**: The hub (HUB) should ONLY contain `wikis.json`, `_index.md`, `log.md`, and `topics/`. If `raw/`, `wiki/`, `inventory/`, `datasets/`, `output/`, `inbox/`, or `config.md` exist at the hub level → **warn, do not delete**. These may hold user data from an older wiki layout. Suggest `/pkb:doctor --fix`, which will move contents to the appropriate topic wiki, repair archive registry drift, or quarantine to `inbox/.unknown/` per C11/C12/C16/C17/C19 in `references/doctor.md`.
 
-2. **Index freshness**: For the active topic wiki, compare actual file counts in `raw/`, `wiki/`, `inventory/`, and `datasets/` subdirectories against the rows in their `_index.md`. Ignore maintenance/report areas such as `.librarian/` and `.audit/`. If mismatched → auto-fix by regenerating the affected directory index from frontmatter and removing dead entries.
+2. **Index freshness**: For the active topic wiki, check index freshness at
+   every level — both the leaf directory indexes and the aggregate indexes:
+   - **Leaf**: `raw/articles/`, `raw/papers/`, `raw/repos/`, `raw/notes/`,
+     `raw/data/`, `wiki/concepts/`, `wiki/topics/`, `wiki/references/`,
+     `wiki/theses/` — count loose `.md` files (excluding `_index.md`) vs
+     rows in their `_index.md`. If mismatched → auto-fix by regenerating
+     from frontmatter.
+   - **Aggregate**: `raw/_index.md` `Total sources` in `## Stats` vs sum of
+     leaf file counts; `wiki/_index.md` rows vs total wiki files; master
+     `_index.md` source/article counts vs actual totals. If mismatched →
+     auto-fix.
+   Ignore maintenance/report areas such as `.librarian/` and `.audit/`.
 
 3. **Orphan detection**: Check if any `.md` files exist in wiki directories but are not listed in any `_index.md`. If found → add them to the index.
 

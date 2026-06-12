@@ -1,3 +1,13 @@
+## 0.1.1 (2026-06-12)
+
+### 🐛 Bug Fixes
+
+#### iter-10 — fix index sync and rename to llm-wiki-pkb
+
+Fixed three spec bugs where agents could silently skip raw source files during compilation: leaf directory indexes (`raw/articles/`, `raw/papers/`, etc.) were documented as optional updates rather than required ones, letting them drift out of sync without any error. Also corrects the plugin display name from `llm-wiki pkb` to `llm-wiki-pkb` and updates the `install-commands` wrapper template so future runs stamp the correct `(llm-wiki-pkb)` prefix on local command descriptions.
+
+*[#9](https://github.com/zhaow-de/llm-wiki/pull/9) by @zhaow-de*
+
 ## 0.1.0 (2026-06-12)
 
 ### 🚀 Features
@@ -30,6 +40,81 @@ Renamed the plugin display name from "llm-wiki personal knowledge base" to "llm-
 Fixed the behavioral evaluation CI job, which was failing before running any test. The promptfoo provider package now resolves correctly, and the Claude Code sandbox gracefully falls back to unsandboxed execution on CI runners that lack the required system tools (`bubblewrap`/`socat`).
 
 *[#1](https://github.com/zhaow-de/llm-wiki/pull/1) by @zhaow-de*
+
+## v0.1.1 (2026-06-12)
+
+
+- Merge pull request #9 from zhaow-de/fix/index-sync-and-displayname
+- fix(references,commands,config): iter-10 — fix index sync and rename to llm-wiki-pkb
+- fix(commands,config): rename displayName to llm-wiki-pkb and prefix wrapper descriptions
+- - plugin.json and marketplace.json: displayName "llm-wiki pkb" → "llm-wiki-pkb"
+  (consistent with the repo naming convention in .claude/rules/naming.md)
+- install-commands.md: add "(llm-wiki-pkb)" prefix to wrapper description
+  template so future /pkb-install-commands runs stamp local aliases correctly
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- fix(references): fix raw sub-directory index sync and guardian check scope
+- - ingestion.md: correct step 2 — raw/_index.md uses category counts, not
+  per-file rows; mark raw/{type}/_index.md update as required (not best-effort)
+  because agents use it during compilation to discover sources
+- indexing.md: split "best-effort" scope: leaf directory indexes (raw/{type}/,
+  wiki/{category}/) are required updates; aggregate indexes (raw/_index.md,
+  wiki/_index.md, master) remain best-effort
+- SKILL.md: expand guardian check step 2 to explicitly cover both leaf and
+  aggregate index levels so the auto-fix fires at the right granularity
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Merge pull request #8 from zhaow-de/chore/back-merge-v0.1.0
+- chore(config): back-merge v0.1.0 into develop
+- Merge pull request #7 from zhaow-de/release/20260612-170638
+- Release v0.1.0
+
+## v0.1.0 (2026-06-12)
+
+
+- chore(release): bump version to v0.1.0
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Merge pull request #6 from zhaow-de/fix/install-commands-args-substitution
+- fix(commands): avoid $ARGUMENTS substitution in install-commands body
+- fix(commands): avoid $ARGUMENTS substitution in install-commands body
+- The instruction "i.e. write \`$ARGUMENTS\` literally" had $ARGUMENTS
+substituted to empty string when the skill was invoked with no args,
+producing the contradictory "write \`\` literally" which caused the
+executor to skip writing wrappers entirely.
+- Replace with a plain-English description that avoids the token:
+"a dollar sign $ immediately followed by ARGUMENTS" — unambiguous
+regardless of invocation arguments.
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Merge pull request #5 from zhaow-de/chore/fix-display-name
+- chore(config): update displayName to llm-wiki pkb
+- chore(config): update displayName to llm-wiki pkb
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Merge pull request #4 from zhaow-de/feat/install-commands
+- feat(commands): iter-4 — install-commands for /pkb-* user aliases
+- docs(readme): reformat Examples code block with per-command comments
+- Change the code fence language to shell for syntax highlighting and
+split each inline trailing comment onto its own preceding line, with
+a blank line between entries for readability.
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- feat(commands): add install-commands to expose /pkb-* user aliases
+- Add /pkb:install-commands skill that syncs wrapper files into
+~/.claude/commands/, registering /pkb and /pkb-* as bare slash commands
+available without the pkb: namespace prefix. The skill handles full
+sync: creates/overwrites current wrappers and deletes stale ones from
+previous plugin versions.
+- Update README to document the one-time setup step and replace all
+/pkb:* invocations with /pkb-* throughout the user-facing sections.
+Update naming.md and readme-usage.md to reflect the new invocation
+convention.
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Merge pull request #3 from zhaow-de/chore/back-merge-v0.0.1
+- chore(config): back-merge v0.0.1 into develop
+- Merge pull request #2 from zhaow-de/release/20260612-153932
+- Release v0.0.1
 
 ## v0.0.1 (2026-06-12)
 

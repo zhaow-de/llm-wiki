@@ -1,6 +1,6 @@
 [project]
 name = "llm-wiki"
-version = "0.1.0"
+version = "0.1.1"
 description = "Not a Python app. Only for pre-commit"
 readme = "README.md"
 requires-python = ">=3.14"

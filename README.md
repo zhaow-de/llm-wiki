@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-v0.1.0-blue)
+![Version](https://img.shields.io/badge/version-v0.1.1-blue)
 ![GitHub License](https://img.shields.io/github/license/zhaow-de/llm-wiki)
 
 # llm-wiki - Personal Knowledge Base
