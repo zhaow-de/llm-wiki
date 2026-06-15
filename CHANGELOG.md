@@ -1,3 +1,19 @@
+## 0.1.2 (2026-06-15)
+
+### 🐛 Bug Fixes
+
+#### C13 aliases for early-session field names
+
+`doctor --fix` now rewrites four non-canonical field names written by early ingestion sessions (`source_url`, `date_ingested`, `source_type`, `url`) to their canonical forms (`source`, `ingested`, `type`, `source`), instead of only warning. Run `doctor --fix` once on any existing wiki to clean up legacy frontmatter automatically.
+
+*[#12](https://github.com/zhaow-de/llm-wiki/pull/12) by @zhaow-de*
+
+#### Real wall-clock time tracking for `--min-time` research sessions
+
+Multi-round research sessions now read the actual system clock (`bash date +%s`) to measure elapsed time, rather than estimating it. Early completion now also requires at least 75% of the declared budget to have elapsed — a high progress score alone can no longer cut a session short before the user's time investment is honoured.
+
+*[#12](https://github.com/zhaow-de/llm-wiki/pull/12) by @zhaow-de*
+
 ## 0.1.1 (2026-06-12)
 
 ### 🐛 Bug Fixes
@@ -40,6 +56,34 @@ Renamed the plugin display name from "llm-wiki personal knowledge base" to "llm-
 Fixed the behavioral evaluation CI job, which was failing before running any test. The promptfoo provider package now resolves correctly, and the Claude Code sandbox gracefully falls back to unsandboxed execution on CI runners that lack the required system tools (`bubblewrap`/`socat`).
 
 *[#1](https://github.com/zhaow-de/llm-wiki/pull/1) by @zhaow-de*
+
+## v0.1.2 (2026-06-15)
+
+
+- Merge pull request #12 from zhaow-de/fix/c13-aliases-and-research-clock
+- fix(references,commands): C13 aliases and real-clock time tracking for --min-time
+- fix(commands,references): enforce real wall-clock time tracking in --min-time sessions
+- Replace estimation-based time checks with actual clock reads: run
+`bash date +%s` at session start and after each round, store epochs in
+.research-session.json. Early-completion trigger now requires elapsed ≥ 75%
+of the declared budget so a high progress score alone cannot cut a session
+short before the user's time investment is respected.
+- Also fixes a self-contradictory paragraph in C13 (doctor.md) where "When
+the tables are empty" was left as the opener after the table received four
+entries.
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- fix(references): add C13 key-alias table entries for early-session field names
+- Four aliases added: source_url→source, date_ingested→ingested,
+source_type→type, url→source. These were used by early ingest sessions
+before the canonical field names were settled; doctor --fix now rewrites
+them instead of only warning.
+- Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+Reviewed-by: Claude Sonnet 4.6 <noreply@anthropic.com>
+- Merge pull request #11 from zhaow-de/chore/back-merge-v0.1.1
+- chore(config): back-merge v0.1.1 into develop
+- Merge pull request #10 from zhaow-de/release/20260612-233858
+- Release v0.1.1
 
 ## v0.1.1 (2026-06-12)
 
