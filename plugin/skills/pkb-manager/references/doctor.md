@@ -305,7 +305,7 @@ Note: thesis files use `type: thesis`, not `category`. Do not alias `theses` to 
 
 **Auto-fix**: Rewrite the YAML key or value in place using Edit. Preserve field order and comments. For older compiled articles that predate the current article schema, `doctor --fix` may also infer missing `category` from the containing directory (`wiki/concepts`, `wiki/topics`, `wiki/references`), infer `summary` from an explicit `**Summary**:` line or the first substantial paragraph, fill missing `created`/`updated` from existing date fields, add `tags: [thesis]` only for thesis files with no tags, and add `volatility: warm`.
 
-**When the tables are empty**, C13 only runs the unknown-key warning — alias rewriting is a no-op. The key-alias table now has four entries from early ingestion sessions that used non-canonical field names.
+The key-alias table now has four entries from early ingestion sessions that used non-canonical field names; any remaining unknown keys still trigger the unknown-key warning without being auto-fixed.
 
 ### C14: Freshness (Warning/Info)
 
