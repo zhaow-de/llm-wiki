@@ -144,26 +144,28 @@ Round 1: Run full research protocol (Phase 1-5)
          → Produces gaps, progress score, and suggested follow-ups
          → Update .research-session.json
          → Append to .session-events.jsonl and refresh .session-checkpoint.json
+         → Run `bash date +%s` and record epoch in .research-session.json; compute elapsed vs. budget
          → Check elapsed time
 
 Reflect: Review ALL findings so far holistically (not just this round's gaps)
          → Score each gap: impact (1-5) × feasibility (1-5) × specificity (1-5)
          → Re-evaluate: Has the research direction shifted? Are earlier gaps still relevant?
          → Pick top 3 gaps by composite score for next round
-         → If progress score ≥ 80 and no high-impact gaps → recommend early completion
+         → If progress score ≥ 80, no high-impact gaps, AND elapsed ≥ 75% of budget → recommend early completion
 
 Round 2: Run research on top 3 gaps as subtopics
          → Compile into wiki, discover new gaps
          → Update .research-session.json
          → Append to .session-events.jsonl and refresh .session-checkpoint.json
+         → Run `bash date +%s` and record epoch; compute elapsed vs. budget
          → Check elapsed time
 
 Reflect: Same holistic reflection — look for cross-topic connections between rounds
          → Research shows this catches 34% more cross-topic connections than gap-picking alone
 
 Round 3+: Continue pattern (research → reflect → decide) until:
-          - --min-time is reached, OR
-          - Progress score ≥ 80 with no high-impact gaps (early completion), OR
+          - --min-time is reached (elapsed_seconds ≥ budget_seconds), OR
+          - Progress score ≥ 80, no high-impact gaps, AND elapsed ≥ 75% of budget (early completion), OR
           - Two consecutive rounds with progress score < 40 (diminishing returns)
 
 Final:   Run /pkb:doctor --fix to clean up
@@ -179,13 +181,13 @@ Final:   Run /pkb:doctor --fix to clean up
 - If a round finds no new gaps, switch to `--deep` mode on existing articles to find connections and contradictions
 - If still no gaps after deep mode, research is complete regardless of remaining time — report early completion
 - Each round logs to `log.md` independently
-- **Progress-based termination**: After each round, calculate a progress score (0-100). If score ≥ 80 and no high-priority gaps remain, recommend early completion even if time budget remains — more rounds of diminishing returns waste tokens without improving quality.
+- **Progress-based termination**: After each round, calculate a progress score (0-100). If score ≥ 80, no high-priority gaps remain, AND elapsed real time ≥ 75% of the declared minimum budget, recommend early completion. Do NOT trigger early completion before the 75% time floor regardless of score — the user declared a time budget for a reason.
 - **Low-yield detection**: If a round's progress score is < 40, the round produced little value. Switch strategy: try --deep angles, broaden search terms, or narrow topic focus. Don't keep doing the same thing.
 
 **Time tracking:**
-- Check wall clock at the start and after each round
-- A round that would exceed the time budget by more than 50% should not start (e.g., if 45 min left and rounds average 40 min, run it; if 10 min left, don't)
-- Report time spent in final summary
+- **Read the real wall clock using Bash — never estimate from context.** At session start, run `bash date +%s` and store the result as `actual_start_epoch` in `.research-session.json`. Compute `min_time_budget_seconds` from the `--min-time` flag (e.g. `6h` → 21600). After each round, run `bash date +%s` again and record `elapsed_seconds = round_end_epoch - actual_start_epoch`.
+- A round that would exceed the time budget by more than 50% should not start (e.g., if 45 min left and rounds average 40 min, run it; if 10 min left, don't).
+- Report time spent in final summary.
 
 **Example:**
 ```

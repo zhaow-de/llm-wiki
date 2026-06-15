@@ -151,9 +151,11 @@ Quantify research quality per round to enable principled termination and low-yie
 progress_score >= 80?
   |-- YES -> Any high-impact gaps remaining?
   |           |-- YES -> Continue (but note quality is high)
-  |           +-- NO  -> Cross-ref density > 60%?
-  |                      |-- YES -> RECOMMEND EARLY COMPLETION
-  |                      +-- NO  -> One more round focusing on connections
+  |           +-- NO  -> elapsed_seconds >= 75% of min_time_budget_seconds?
+  |                      |-- NO  -> Continue (hold to budget floor — do not exit early)
+  |                      +-- YES -> Cross-ref density > 60%?
+  |                                 |-- YES -> RECOMMEND EARLY COMPLETION
+  |                                 +-- NO  -> One more round focusing on connections
   +-- NO  -> progress_score < 40?
              |-- YES -> LOW YIELD WARNING
              |          -> Suggest: different terms, --deep, narrower topic
@@ -252,13 +254,17 @@ Persistent state for multi-round research and thesis sessions, enabling crash re
   "session_id": "2026-04-06-143022",
   "topic": "research topic",
   "start_time": "2026-04-06T14:30:22Z",
+  "actual_start_epoch": 1744036222,
   "min_time_budget": "2h",
+  "min_time_budget_seconds": 7200,
   "current_round": 2,
   "rounds_completed": [
     {
       "round": 1,
       "start_time": "2026-04-06T14:30:22Z",
       "end_time": "2026-04-06T15:02:45Z",
+      "end_epoch": 1744038165,
+      "elapsed_seconds": 1943,
       "sources_ingested": 5,
       "articles_compiled": 3,
       "gaps": ["gap1 description", "gap2 description"],
