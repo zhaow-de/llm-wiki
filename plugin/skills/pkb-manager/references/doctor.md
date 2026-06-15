@@ -280,9 +280,11 @@ ingestion).
 **Key aliases** (old → canonical, append-only — never remove an entry). Populate this table when a real field rename happens; do not pre-populate with speculative entries.
 
 ```
-# (empty — add entries as schema evolves)
 # Format:  old_key  →  canonical_key
-# Example: source_url  →  source        # added when raw sources dropped source_url in v0.X.Y
+source_url  →  source        # early ingest sessions wrote source_url instead of source
+date_ingested  →  ingested   # early ingest sessions wrote date_ingested instead of ingested
+source_type  →  type         # early ingest sessions wrote source_type instead of type
+url  →  source               # some early ingest sessions wrote url for the source URL
 ```
 
 **Value aliases** (enum drift — append-only). Populate when an enum value is renamed.
@@ -303,7 +305,7 @@ Note: thesis files use `type: thesis`, not `category`. Do not alias `theses` to 
 
 **Auto-fix**: Rewrite the YAML key or value in place using Edit. Preserve field order and comments. For older compiled articles that predate the current article schema, `doctor --fix` may also infer missing `category` from the containing directory (`wiki/concepts`, `wiki/topics`, `wiki/references`), infer `summary` from an explicit `**Summary**:` line or the first substantial paragraph, fill missing `created`/`updated` from existing date fields, add `tags: [thesis]` only for thesis files with no tags, and add `volatility: warm`.
 
-**When the tables are empty** (current state), C13 only runs the unknown-key warning — alias rewriting is a no-op. This is the honest default: we have no backward-compat debt yet, so advertising alias entries would be fiction. First real rename → first real alias entry.
+The key-alias table now has four entries from early ingestion sessions that used non-canonical field names; any remaining unknown keys still trigger the unknown-key warning without being auto-fixed.
 
 ### C14: Freshness (Warning/Info)
 
